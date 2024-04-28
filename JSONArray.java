@@ -35,21 +35,42 @@ public class JSONArray implements JSONValue {
    * Convert to a string (e.g., for printing).
    */
   public String toString() {
-    return "";          // STUB
+    String result = "[";
+
+    for(int i = 0; i < values.size(); i++) {
+      result += values.get(i).toString() + ", ";
+    } // for
+    
+    return result + "]";          
   } // toString()
 
   /**
    * Compare to another object.
    */
   public boolean equals(Object other) {
-    return true;        // STUB
+    if (!(other instanceof JSONArray)) {
+      return false;
+    } // if
+
+    if (this.values.size() != ((JSONArray) other).values.size()) {
+      return false;
+    } // if
+
+    // Checking each element of array
+    for (int i = 0; i < values.size(); i++) {
+      if (!this.values.get(i).equals(((JSONArray) other).values.get(i))) {
+        return false;
+      } // if
+    } // for
+
+    return true;
   } // equals(Object)
 
   /**
    * Compute the hash code.
    */
   public int hashCode() {
-    return 0;           // STUB
+    return this.values.hashCode();
   } // hashCode()
 
   // +--------------------+------------------------------------------
@@ -60,7 +81,17 @@ public class JSONArray implements JSONValue {
    * Write the value as JSON.
    */
   public void writeJSON(PrintWriter pen) {
-                        // STUB
+    int arrayLength = this.values.size();
+
+    pen.printf("[");
+    for (int i = 0; i < arrayLength - 1; i++) {
+      this.values.get(i).writeJSON(pen);
+      pen.printf(", ");
+    } // for
+
+    // Print last item
+    this.values.get(arrayLength - 1).writeJSON(pen);
+    pen.printf("]");
   } // writeJSON(PrintWriter)
 
   /**

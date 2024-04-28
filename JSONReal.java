@@ -64,7 +64,7 @@ public class JSONReal implements JSONValue {
    * Compute the hash code.
    */
   public int hashCode() {
-    return 0;           // STUB
+    return this.value.hashCode();
   } // hashCode()
 
   // +--------------------+------------------------------------------
@@ -75,7 +75,7 @@ public class JSONReal implements JSONValue {
    * Write the value as JSON.
    */
   public void writeJSON(PrintWriter pen) {
-                        // STUB
+    pen.printf(this.value.toString());
   } // writeJSON(PrintWriter)
 
   /**

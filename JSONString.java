@@ -33,21 +33,23 @@ public class JSONString implements JSONValue {
    * Convert to a string (e.g., for printing).
    */
   public String toString() {
-    return "";          // STUB
+    return this.value.toString();
   } // toString()
 
   /**
    * Compare to another object.
    */
   public boolean equals(Object other) {
-    return true;        // STUB
+    return (((other instanceof JSONString) 
+           && (this.value.equals(((JSONString) other).value) ))
+           || (this.value.equals(other)));
   } // equals(Object)
 
   /**
    * Compute the hash code.
    */
   public int hashCode() {
-    return 0;           // STUB
+    return this.value.hashCode();
   } // hashCode()
 
   // +--------------------+------------------------------------------
@@ -58,7 +60,7 @@ public class JSONString implements JSONValue {
    * Write the value as JSON.
    */
   public void writeJSON(PrintWriter pen) {
-                        // STUB
+    pen.printf("\"" + this.value + "\"");
   } // writeJSON(PrintWriter)
 
   /**
