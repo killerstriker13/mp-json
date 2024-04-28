@@ -55,7 +55,9 @@ public class JSONInteger implements JSONValue {
    * Compare to another object.
    */
   public boolean equals(Object other) {
-    return true;        // STUB
+    return (((other instanceof JSONInteger) 
+           && (this.value.equals(((JSONInteger) other).value) ))
+           || (this.value.equals(other)));
   } // equals(Object)
 
   /**

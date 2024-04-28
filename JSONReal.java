@@ -55,7 +55,9 @@ public class JSONReal implements JSONValue {
    * Compare to another object.
    */
   public boolean equals(Object other) {
-    return true;        // STUB
+    return ( ( (other instanceof JSONReal) 
+    && (this.value == ((JSONReal) other).value))
+  || (this.value == other) );
   } // equals(Object)
 
   /**
