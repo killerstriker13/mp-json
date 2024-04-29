@@ -64,8 +64,8 @@ public class JSONConstant implements JSONValue {
    */
   public boolean equals(Object other) {
     return ( ( (other instanceof JSONConstant) 
-               && (this.value == ((JSONConstant) other).value) )
-             || (this.value == other) );
+               && (this.value.equals(((JSONConstant) other).value)))
+             || (this.value == other));
   } // equals(Object)
 
   /**
@@ -86,7 +86,7 @@ public class JSONConstant implements JSONValue {
    * Write the value as JSON.
    */
   public void writeJSON(PrintWriter pen) {
-    pen.print(this.toString());
+    pen.printf(this.toString());
   } // writeJSON(PrintWriter)
 
   /**
