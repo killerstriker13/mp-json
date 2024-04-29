@@ -40,9 +40,7 @@ public class JSONString implements JSONValue {
    * Compare to another object.
    */
   public boolean equals(Object other) {
-    return (((other instanceof JSONString) 
-           && (this.value.equals(((JSONString) other).value) ))
-           || (this.value.equals(other)));
+    return ((other instanceof JSONString) && (this.value.equals(((JSONString) other).value)));
   } // equals(Object)
 
   /**

@@ -1,18 +1,58 @@
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Random;
 
 /**
  * JSON hashes/objects.
  */
-public class JSONHash implements JSONValue {
+public class JSONHash<JSONString, JSONValue> implements JSONValue {
+
+  // +-----------+-------------------------------------------------------
+  // | Constants |
+  // +-----------+
+
+  /**
+   * The load factor for expanding the table.
+   */
+  static final double LOAD_FACTOR = 0.5;
+
+  /**
+   * The capacity of the hash table at initialization.
+   */
+  static final int INITIAL_CAPACITY = 41;
 
   // +--------+------------------------------------------------------
   // | Fields |
   // +--------+
+  /**
+   * The number of values currently stored in the hash table. We use this to
+   * determine when to expand the hash table.
+   */
+  int size = 0;
+
+  /**
+   * The array that we use to store the ArrayList of key/value pairs. (We use an
+   * array, rather than an ArrayList, because we want to control expansion and
+   * ArrayLists of ArrayLists are just weird.)
+   */
+  Object[] buckets;
+
+   /**
+   * Our helpful random number generator, used primarily when expanding the size
+   * of the table..
+   */
+  Random rand;
+
 
   // +--------------+------------------------------------------------
   // | Constructors |
   // +--------------+
+
+  public JSONHash() {
+    this.rand = new Random();
+    this.clear();
+  } // JSONHash()
 
   // +-------------------------+-------------------------------------
   // | Standard object methods |
@@ -65,7 +105,19 @@ public class JSONHash implements JSONValue {
    * Get the value associated with a key.
    */
   public JSONValue get(JSONString key) {
-    return null;        // STUB
+    int index = find(key);
+    @SuppressWarnings("unchecked")
+    ArrayList<KVPair<JSONString, JSONValue>> alist = (ArrayList<KVPair<JSONString, JSONValue>>) buckets[index];
+    if (alist == null) {
+      throw new IndexOutOfBoundsException("Invalid key: " + key);
+    } else {
+      for (KVPair<JSONString, JSONValue> pair: alist) {
+        if (pair.key().equals(key)) {
+          return pair.value();
+        } // if (pair.key().equals(key))
+      } //  for (Pair<JSONString, JSONValue> pair: alist) 
+      throw new IndexOutOfBoundsException("Invalid key: " + key);
+    } // get
   } // get(JSONString)
 
   /**
@@ -86,7 +138,41 @@ public class JSONHash implements JSONValue {
    * Find out how many key/value pairs are in the hash table.
    */
   public int size() {
-    return 0;           // STUB
+    return this.size;
   } // size()
+
+  /**
+   * Clear the whole table.
+   */
+  public void clear() {
+    this.buckets = new Object[INITIAL_CAPACITY];
+    this.size = 0;
+  } // clear()
+
+  @SuppressWarnings("unchecked")
+  void expand() {
+    // Figure out the size of the new table
+    int newSize = 2 * this.buckets.length + rand.nextInt(10);
+    // Remember the old table
+    Object[] oldBuckets = this.buckets;
+    // Create a new table of that size.
+    this.buckets = new Object[newSize];
+    // Move all buckets from the old table to their appropriate
+    // location in the new table.
+    for (int i = 0; i < oldBuckets.length; i++) {
+      if (oldBuckets[i] == null) {
+        continue;
+      }
+      for (KVPair<JSONString, JSONValue> pair: (ArrayList<KVPair<JSONString, JSONValue>>) oldBuckets[i]) {
+        this.set(pair.key(), pair.value());
+      }
+    } // for
+  } // expand()
+
+
+  int find(K key) {
+    return Math.abs(key.hashCode()) % this.buckets.length;
+  } // find(K)
+
 
 } // class JSONHash
