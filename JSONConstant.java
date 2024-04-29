@@ -63,9 +63,9 @@ public class JSONConstant implements JSONValue {
    * Compare to another object.
    */
   public boolean equals(Object other) {
-    return ( ( (other instanceof JSONConstant) 
-               && (this.value.equals(((JSONConstant) other).value)))
-             || (this.value == other));
+    return (((other instanceof JSONConstant) 
+            && (this.value.equals(((JSONConstant) other).value)))
+            || (this.value.equals(other)));
   } // equals(Object)
 
   /**
