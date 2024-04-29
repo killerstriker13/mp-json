@@ -6,7 +6,7 @@ import java.util.Random;
 /**
  * JSON hashes/objects.
  */
-public class JSONHash<JSONString, JSONValue> implements JSONValue {
+public class JSONHash implements JSONValue {
 
   // +-----------+-------------------------------------------------------
   // | Constants |
@@ -26,21 +26,20 @@ public class JSONHash<JSONString, JSONValue> implements JSONValue {
   // | Fields |
   // +--------+
   /**
-   * The number of values currently stored in the hash table. We use this to
-   * determine when to expand the hash table.
+   * The number of values currently stored in the hash table. We use this to determine when to
+   * expand the hash table.
    */
   int size = 0;
 
   /**
-   * The array that we use to store the ArrayList of key/value pairs. (We use an
-   * array, rather than an ArrayList, because we want to control expansion and
-   * ArrayLists of ArrayLists are just weird.)
+   * The array that we use to store the ArrayList of key/value pairs. (We use an array, rather than
+   * an ArrayList, because we want to control expansion and ArrayLists of ArrayLists are just
+   * weird.)
    */
   Object[] buckets;
 
-   /**
-   * Our helpful random number generator, used primarily when expanding the size
-   * of the table..
+  /**
+   * Our helpful random number generator, used primarily when expanding the size of the table..
    */
   Random rand;
 
@@ -62,21 +61,21 @@ public class JSONHash<JSONString, JSONValue> implements JSONValue {
    * Convert to a string (e.g., for printing).
    */
   public String toString() {
-    return "";          // STUB
+    return ""; // STUB
   } // toString()
 
   /**
    * Compare to another object.
    */
   public boolean equals(Object other) {
-    return true;        // STUB
+    return true; // STUB
   } // equals(Object)
 
   /**
    * Compute the hash code.
    */
   public int hashCode() {
-    return 0;           // STUB
+    return 0; // STUB
   } // hashCode()
 
   // +--------------------+------------------------------------------
@@ -87,13 +86,13 @@ public class JSONHash<JSONString, JSONValue> implements JSONValue {
    * Write the value as JSON.
    */
   public void writeJSON(PrintWriter pen) {
-                        // STUB
+    // STUB
   } // writeJSON(PrintWriter)
 
   /**
    * Get the underlying value.
    */
-  public Iterator<KVPair<JSONString,JSONValue>> getValue() {
+  public Iterator<KVPair<JSONString, JSONValue>> getValue() {
     return this.iterator();
   } // getValue()
 
@@ -101,21 +100,32 @@ public class JSONHash<JSONString, JSONValue> implements JSONValue {
   // | Hashtable methods |
   // +-------------------+
 
+  public boolean containsKey(JSONString key) {
+    // STUB/HACK
+    try {
+      get(key);
+      return true;
+    } catch (Exception e) {
+      return false;
+    } // try/catch
+  } // containsKey(K)
+
   /**
    * Get the value associated with a key.
    */
   public JSONValue get(JSONString key) {
     int index = find(key);
     @SuppressWarnings("unchecked")
-    ArrayList<KVPair<JSONString, JSONValue>> alist = (ArrayList<KVPair<JSONString, JSONValue>>) buckets[index];
+    ArrayList<KVPair<JSONString, JSONValue>> alist =
+        (ArrayList<KVPair<JSONString, JSONValue>>) buckets[index];
     if (alist == null) {
       throw new IndexOutOfBoundsException("Invalid key: " + key);
     } else {
-      for (KVPair<JSONString, JSONValue> pair: alist) {
+      for (KVPair<JSONString, JSONValue> pair : alist) {
         if (pair.key().equals(key)) {
           return pair.value();
         } // if (pair.key().equals(key))
-      } //  for (Pair<JSONString, JSONValue> pair: alist) 
+      } // for (Pair<JSONString, JSONValue> pair: alist)
       throw new IndexOutOfBoundsException("Invalid key: " + key);
     } // get
   } // get(JSONString)
@@ -123,15 +133,46 @@ public class JSONHash<JSONString, JSONValue> implements JSONValue {
   /**
    * Get all of the key/value pairs.
    */
-  public Iterator<KVPair<JSONString,JSONValue>> iterator() {
-    return null;        // STUB
+  public Iterator<KVPair<JSONString, JSONValue>> iterator() {
+    return null; // STUB
   } // iterator()
 
   /**
    * Set the value associated with a key.
    */
   public void set(JSONString key, JSONValue value) {
-                        // STUB
+    int flag = 0;
+
+    // If there are too many entries, expand the table.
+    if (this.size > (this.buckets.length * LOAD_FACTOR)) {
+      expand();
+    } // if there are too many entries
+
+    // Find out where the key belongs and put the pair there.
+    int index = find(key);
+    @SuppressWarnings("unchecked")
+    ArrayList<KVPair<JSONString, JSONValue>> alist =
+        (ArrayList<KVPair<JSONString, JSONValue>>) this.buckets[index];
+
+    // Special case: Nothing there yet
+    if (alist == null) {
+      alist = new ArrayList<KVPair<JSONString, JSONValue>>();
+      this.buckets[index] = alist;
+    } else {
+      for (int i = 0; i < alist.size(); i++) {
+        if (alist.get(i).key().equals(key)) {
+          KVPair<JSONString, JSONValue> pair = new KVPair<JSONString, JSONValue>(key, value);
+          alist.set(i, pair);
+          flag = -1;
+        } // if
+      } // for
+    } // if else
+
+    if (flag != -1) {
+      alist.add(new KVPair<JSONString, JSONValue>(key, value));
+      ++this.size;
+    } // if
+    
   } // set(JSONString, JSONValue)
 
   /**
@@ -162,17 +203,15 @@ public class JSONHash<JSONString, JSONValue> implements JSONValue {
     for (int i = 0; i < oldBuckets.length; i++) {
       if (oldBuckets[i] == null) {
         continue;
-      }
-      for (KVPair<JSONString, JSONValue> pair: (ArrayList<KVPair<JSONString, JSONValue>>) oldBuckets[i]) {
+      } // if
+      for (KVPair<JSONString, JSONValue> pair : (ArrayList<KVPair<JSONString, JSONValue>>) oldBuckets[i]) {
         this.set(pair.key(), pair.value());
-      }
+      } // for
     } // for
   } // expand()
 
 
-  int find(K key) {
+  int find(JSONString key) {
     return Math.abs(key.hashCode()) % this.buckets.length;
   } // find(K)
-
-
 } // class JSONHash
