@@ -5,6 +5,12 @@ import java.util.Random;
 
 /**
  * JSON hashes/objects.
+ * 
+ * @author Arsal Shaikh
+ * @author Pranav Kapoor Bhandari
+ * @author Shibam Mukhopadhyay
+ * @author Samuel A. Rebelsky (Hash Table lab)
+ * @author Garikai Gijima (Hash Table lab partner)
  */
 public class JSONHash implements JSONValue {
 
@@ -17,32 +23,25 @@ public class JSONHash implements JSONValue {
    */
   static final double LOAD_FACTOR = 0.5;
 
-  /**
-   * The capacity of the hash table at initialization.
-   */
-  static final int INITIAL_CAPACITY = 41;
-
   // +--------+------------------------------------------------------
   // | Fields |
   // +--------+
   /**
-   * The number of values currently stored in the hash table. We use this to determine when to
-   * expand the hash table.
+   * The number of values currently stored in the hash table. We use this to
+   * determine when to expand the hash table.
    */
   int size = 0;
 
   /**
-   * The array that we use to store the ArrayList of key/value pairs. (We use an array, rather than
-   * an ArrayList, because we want to control expansion and ArrayLists of ArrayLists are just
-   * weird.)
+   * The array that we use to store the key/value pairs.
    */
-  Object[] buckets;
+  Object[] buckets = new Object[4];
 
   /**
-   * Our helpful random number generator, used primarily when expanding the size of the table..
+   * Our helpful random number generator, used primarily when expanding the size
+   * of the table..
    */
   Random rand;
-
 
   // +--------------+------------------------------------------------
   // | Constructors |
@@ -50,32 +49,74 @@ public class JSONHash implements JSONValue {
 
   public JSONHash() {
     this.rand = new Random();
-    this.clear();
   } // JSONHash()
 
   // +-------------------------+-------------------------------------
   // | Standard object methods |
   // +-------------------------+
 
-  /**
+   /**
    * Convert to a string (e.g., for printing).
    */
+  @SuppressWarnings("unchecked")
   public String toString() {
-    return ""; // STUB
+    String result = "";
+    Iterator iter = this.iterator();
+    while (iter.hasNext()){
+      KVPair<JSONString, JSONValue> pair = (KVPair<JSONString, JSONValue>) iter.next();
+      String kvPair = pair.key().toString() + " : " + pair.value().toString();
+      result+= kvPair;
+      if (iter.hasNext()) {
+        result += ",";
+      } // if
+    } // while
+    return "{"+result+"}"; 
   } // toString()
 
   /**
    * Compare to another object.
    */
   public boolean equals(Object other) {
-    return true; // STUB
+    if (!(other instanceof JSONHash)) {
+      return false;
+    } // if
+
+    if(((JSONHash)other).size() != this.size()) {
+      return false;
+    } // if
+    
+    for (int i = 0; i < this.buckets.length; i++) {
+      @SuppressWarnings("unchecked")
+      ArrayList<KVPair<JSONString,JSONValue>> thisList = (ArrayList<KVPair<JSONString,JSONValue>>) this.buckets[i];
+      @SuppressWarnings("unchecked")
+      ArrayList<KVPair<JSONString,JSONValue>> otherList = (ArrayList<KVPair<JSONString,JSONValue>>) ((JSONHash) other).buckets[i];
+      
+      if (thisList == null && otherList == null) {
+          return true;
+      } // if both null
+      if (thisList == null || otherList == null) {
+          return false;
+      } // if either one null only
+      
+      for (int index = 0; index < thisList.size(); index++) {
+        if (!thisList.get(index).key().equals(otherList.get(index).key())) {
+          return false;
+        } // if key not equals
+
+        if (!thisList.get(index).value().equals(otherList.get(index).value())) {
+          return false;
+        } // if values not equals
+      } // for each pair in the bucket
+    } // for each bucket
+    
+    return true; 
   } // equals(Object)
 
   /**
    * Compute the hash code.
    */
   public int hashCode() {
-    return 0; // STUB
+    return this.buckets.hashCode();
   } // hashCode()
 
   // +--------------------+------------------------------------------
@@ -86,7 +127,7 @@ public class JSONHash implements JSONValue {
    * Write the value as JSON.
    */
   public void writeJSON(PrintWriter pen) {
-    // STUB
+    pen.printf(this.toString());
   } // writeJSON(PrintWriter)
 
   /**
@@ -101,7 +142,6 @@ public class JSONHash implements JSONValue {
   // +-------------------+
 
   public boolean containsKey(JSONString key) {
-    // STUB/HACK
     try {
       get(key);
       return true;
@@ -119,14 +159,14 @@ public class JSONHash implements JSONValue {
     ArrayList<KVPair<JSONString, JSONValue>> alist =
         (ArrayList<KVPair<JSONString, JSONValue>>) buckets[index];
     if (alist == null) {
-      throw new IndexOutOfBoundsException("Invalid key: " + key);
+      throw new IndexOutOfBoundsException("Invalid key: " + key.toString());
     } else {
       for (KVPair<JSONString, JSONValue> pair : alist) {
         if (pair.key().equals(key)) {
           return pair.value();
         } // if (pair.key().equals(key))
       } // for (Pair<JSONString, JSONValue> pair: alist)
-      throw new IndexOutOfBoundsException("Invalid key: " + key);
+      throw new IndexOutOfBoundsException("Invalid key: " + key.toString());
     } // get
   } // get(JSONString)
 
@@ -134,26 +174,65 @@ public class JSONHash implements JSONValue {
    * Get all of the key/value pairs.
    */
   public Iterator<KVPair<JSONString, JSONValue>> iterator() {
-    return null; // STUB
+    return new Iterator<KVPair<JSONString,JSONValue>>() {
+      int numVisited = 0;
+      int[] nextPos = {0,0};
+      int currentBucket = 0;
+      int nextPair = 0;
+
+      public boolean hasNext() {
+        if(numVisited < JSONHash.this.size()){
+          return true;
+        } // if
+        else {
+          return false;
+        } // else
+      } // hasNext()
+
+      @SuppressWarnings("unchecked")
+      public KVPair<JSONString,JSONValue> next() {
+        if (!this.hasNext()) {
+          throw new IndexOutOfBoundsException();
+        }
+
+        ArrayList<KVPair<JSONString, JSONValue>> alist = 
+            (ArrayList<KVPair<JSONString, JSONValue>>) JSONHash.this.buckets[currentBucket];
+        
+        // if the bucket is null then skip it
+        if (alist == null) {
+          currentBucket++;
+          nextPair = 0;
+          this.next();
+        } // if
+        
+        int index = nextPair;
+        nextPair = (index + 1) % alist.size();
+        
+        // if reached end of alist then go to the next bucket
+        if (nextPair == 0) {
+          currentBucket++;
+        } // if
+
+        numVisited++;
+        return alist.get(index);
+      } // next()
+    }; // new Iterator
   } // iterator()
 
   /**
    * Set the value associated with a key.
    */
+  @SuppressWarnings("unchecked")
   public void set(JSONString key, JSONValue value) {
     int flag = 0;
-
     // If there are too many entries, expand the table.
     if (this.size > (this.buckets.length * LOAD_FACTOR)) {
       expand();
-    } // if there are too many entries
-
+    } // if
     // Find out where the key belongs and put the pair there.
     int index = find(key);
-    @SuppressWarnings("unchecked")
     ArrayList<KVPair<JSONString, JSONValue>> alist =
         (ArrayList<KVPair<JSONString, JSONValue>>) this.buckets[index];
-
     // Special case: Nothing there yet
     if (alist == null) {
       alist = new ArrayList<KVPair<JSONString, JSONValue>>();
@@ -166,13 +245,11 @@ public class JSONHash implements JSONValue {
           flag = -1;
         } // if
       } // for
-    } // if else
-
-    if (flag != -1) {
+    } // if-else
+    if (flag != -1) { // we did not replace the value
       alist.add(new KVPair<JSONString, JSONValue>(key, value));
       ++this.size;
     } // if
-    
   } // set(JSONString, JSONValue)
 
   /**
@@ -182,13 +259,6 @@ public class JSONHash implements JSONValue {
     return this.size;
   } // size()
 
-  /**
-   * Clear the whole table.
-   */
-  public void clear() {
-    this.buckets = new Object[INITIAL_CAPACITY];
-    this.size = 0;
-  } // clear()
 
   @SuppressWarnings("unchecked")
   void expand() {
