@@ -158,16 +158,19 @@ public class JSONHash implements JSONValue {
     @SuppressWarnings("unchecked")
     ArrayList<KVPair<JSONString, JSONValue>> alist =
         (ArrayList<KVPair<JSONString, JSONValue>>) buckets[index];
+    
     if (alist == null) {
       throw new IndexOutOfBoundsException("Invalid key: " + key.toString());
-    } else {
-      for (KVPair<JSONString, JSONValue> pair : alist) {
-        if (pair.key().equals(key)) {
-          return pair.value();
-        } // if (pair.key().equals(key))
-      } // for (Pair<JSONString, JSONValue> pair: alist)
-      throw new IndexOutOfBoundsException("Invalid key: " + key.toString());
-    } // get
+    } 
+
+    for (KVPair<JSONString, JSONValue> pair : alist) {
+      if (pair.key().equals(key)) {
+        return pair.value();
+      } // if
+    } // for
+
+    // if not found
+    throw new IndexOutOfBoundsException("Invalid key: " + key.toString());
   } // get(JSONString)
 
   /**
@@ -176,17 +179,14 @@ public class JSONHash implements JSONValue {
   public Iterator<KVPair<JSONString, JSONValue>> iterator() {
     return new Iterator<KVPair<JSONString,JSONValue>>() {
       int numVisited = 0;
-      int[] nextPos = {0,0};
       int currentBucket = 0;
       int nextPair = 0;
 
       public boolean hasNext() {
-        if(numVisited < JSONHash.this.size()){
+        if (numVisited < JSONHash.this.size()) {
           return true;
         } // if
-        else {
-          return false;
-        } // else
+        return false;
       } // hasNext()
 
       @SuppressWarnings("unchecked")
@@ -224,29 +224,36 @@ public class JSONHash implements JSONValue {
    */
   @SuppressWarnings("unchecked")
   public void set(JSONString key, JSONValue value) {
-    int flag = 0;
+    boolean keyExists = false;
+    
     // If there are too many entries, expand the table.
     if (this.size > (this.buckets.length * LOAD_FACTOR)) {
       expand();
     } // if
-    // Find out where the key belongs and put the pair there.
+
+    // Find out where the key belongs.
     int index = find(key);
+    
+    // Repersents the bucket
     ArrayList<KVPair<JSONString, JSONValue>> alist =
         (ArrayList<KVPair<JSONString, JSONValue>>) this.buckets[index];
-    // Special case: Nothing there yet
+    
+    // If bucket is empty then create a new list there.
     if (alist == null) {
       alist = new ArrayList<KVPair<JSONString, JSONValue>>();
       this.buckets[index] = alist;
-    } else {
-      for (int i = 0; i < alist.size(); i++) {
-        if (alist.get(i).key().equals(key)) {
-          KVPair<JSONString, JSONValue> pair = new KVPair<JSONString, JSONValue>(key, value);
-          alist.set(i, pair);
-          flag = -1;
-        } // if
-      } // for
-    } // if-else
-    if (flag != -1) { // we did not replace the value
+    } // if
+
+    for (int i = 0; i < alist.size(); i++) {
+      if (alist.get(i).key().equals(key)) {
+        KVPair<JSONString, JSONValue> pair = new KVPair<JSONString, JSONValue>(key, value);
+        alist.set(i, pair);
+        keyExists = true;
+      } // if
+    } // for
+
+    // We did not replace the value
+    if (keyExists == false) {
       alist.add(new KVPair<JSONString, JSONValue>(key, value));
       ++this.size;
     } // if
@@ -261,9 +268,9 @@ public class JSONHash implements JSONValue {
 
 
   @SuppressWarnings("unchecked")
-  void expand() {
+  private void expand() {
     // Figure out the size of the new table
-    int newSize = 2 * this.buckets.length + rand.nextInt(10);
+    int newSize = (2 * this.buckets.length) + rand.nextInt(10);
     // Remember the old table
     Object[] oldBuckets = this.buckets;
     // Create a new table of that size.
@@ -281,7 +288,7 @@ public class JSONHash implements JSONValue {
   } // expand()
 
 
-  int find(JSONString key) {
+  private int find(JSONString key) {
     return Math.abs(key.hashCode()) % this.buckets.length;
   } // find(K)
 } // class JSONHash
