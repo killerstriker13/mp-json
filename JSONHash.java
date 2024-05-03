@@ -58,10 +58,9 @@ public class JSONHash implements JSONValue {
    /**
    * Convert to a string (e.g., for printing).
    */
-  @SuppressWarnings("unchecked")
   public String toString() {
     String result = "";
-    Iterator iter = this.iterator();
+    Iterator<KVPair<JSONString,JSONValue>> iter = this.iterator(); //TO-FIX
     while (iter.hasNext()){
       KVPair<JSONString, JSONValue> pair = (KVPair<JSONString, JSONValue>) iter.next();
       String kvPair = pair.key().toString() + " : " + pair.value().toString();
