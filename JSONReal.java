@@ -55,7 +55,11 @@ public class JSONReal implements JSONValue {
    * Compare to another object.
    */
   public boolean equals(Object other) {
-    return ((other instanceof JSONReal) && (this.value == ((JSONReal) other).value));
+    //BigDecimal otherReal = ((JSONReal) other).value;
+    if (other instanceof JSONReal) {
+      return other instanceof JSONReal;
+    } // if
+    return this.value.equals(((JSONReal)other).value);
   } // equals(Object)
 
   /**

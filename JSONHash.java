@@ -80,9 +80,15 @@ public class JSONHash implements JSONValue {
       return false;
     } // if
 
-    if(((JSONHash)other).size() != this.size()) {
-      return false;
-    } // if
+    //                  FIXME 
+    // I decided to comment this out because the JSONHash expands randomly so two hashmaps 
+    // with the same key value pairs would still be considered different by this program. 
+    // I think we should remove this code.
+    // - Arsal
+
+    // if(((JSONHash)other).size() != this.size()) {
+    //   return false;
+    // } // if
     
     for (int i = 0; i < this.buckets.length; i++) {
       @SuppressWarnings("unchecked")
