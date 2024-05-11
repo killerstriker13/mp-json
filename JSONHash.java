@@ -60,8 +60,8 @@ public class JSONHash implements JSONValue {
    */
   public String toString() {
     String result = "";
-    Iterator<KVPair<JSONString,JSONValue>> iter = this.iterator(); //TO-FIX
-    while (iter.hasNext()){
+    Iterator<KVPair<JSONString,JSONValue>> iter = this.iterator();
+    while (iter.hasNext()) {
       KVPair<JSONString, JSONValue> pair = (KVPair<JSONString, JSONValue>) iter.next();
       String kvPair = pair.key().toString() + " : " + pair.value().toString();
       result+= kvPair;
@@ -80,39 +80,27 @@ public class JSONHash implements JSONValue {
       return false;
     } // if
 
-    //                  FIXME 
-    // I decided to comment this out because the JSONHash expands randomly so two hashmaps 
-    // with the same key value pairs would still be considered different by this program. 
-    // I think we should remove this code.
-    // - Arsal
-
-    // if(((JSONHash)other).size() != this.size()) {
-    //   return false;
-    // } // if
-    
-    for (int i = 0; i < this.buckets.length; i++) {
-      @SuppressWarnings("unchecked")
-      ArrayList<KVPair<JSONString,JSONValue>> thisList = (ArrayList<KVPair<JSONString,JSONValue>>) this.buckets[i];
-      @SuppressWarnings("unchecked")
-      ArrayList<KVPair<JSONString,JSONValue>> otherList = (ArrayList<KVPair<JSONString,JSONValue>>) ((JSONHash) other).buckets[i];
+    Iterator<KVPair<JSONString,JSONValue>> iter = this.iterator();
+    JSONHash otherHash = (JSONHash) other;
+    JSONString thisKey;
+    JSONValue otherValue;
+    while (iter.hasNext()) {
+      // Get pair from this
+      KVPair<JSONString, JSONValue> pair = (KVPair<JSONString, JSONValue>) iter.next();
+      thisKey = pair.key();
+      JSONValue thisValue = pair.value();
       
-      if (thisList == null && otherList == null) {
-          return true;
-      } // if both null
-      if (thisList == null || otherList == null) {
+      try {
+        otherValue = otherHash.get(thisKey);
+        if (!thisValue.equals(otherValue)) {
           return false;
-      } // if either one null only
-      
-      for (int index = 0; index < thisList.size(); index++) {
-        if (!thisList.get(index).key().equals(otherList.get(index).key())) {
-          return false;
-        } // if key not equals
+        } // if
+      } catch (IndexOutOfBoundsException e) {
+        // if value not found
+        return false;
+      } // try catch
 
-        if (!thisList.get(index).value().equals(otherList.get(index).value())) {
-          return false;
-        } // if values not equals
-      } // for each pair in the bucket
-    } // for each bucket
+    } // while
     
     return true; 
   } // equals(Object)
@@ -152,8 +140,8 @@ public class JSONHash implements JSONValue {
       return true;
     } catch (Exception e) {
       return false;
-    } // try/catch
-  } // containsKey(K)
+    } // try catch
+  } // containsKey(JSONString)
 
   /**
    * Get the value associated with a key.
@@ -188,17 +176,14 @@ public class JSONHash implements JSONValue {
       int nextPair = 0;
 
       public boolean hasNext() {
-        if (numVisited < JSONHash.this.size()) {
-          return true;
-        } // if
-        return false;
+        return numVisited < JSONHash.this.size();
       } // hasNext()
 
       @SuppressWarnings("unchecked")
       public KVPair<JSONString,JSONValue> next() {
         if (!this.hasNext()) {
           throw new IndexOutOfBoundsException();
-        }
+        } // if
 
         ArrayList<KVPair<JSONString, JSONValue>> alist = 
             (ArrayList<KVPair<JSONString, JSONValue>>) JSONHash.this.buckets[currentBucket];
@@ -207,7 +192,7 @@ public class JSONHash implements JSONValue {
         if (alist == null) {
           currentBucket++;
           nextPair = 0;
-          this.next();
+          return this.next();
         } // if
         
         int index = nextPair;
@@ -257,7 +242,7 @@ public class JSONHash implements JSONValue {
       } // if
     } // for
 
-    // We did not replace the value
+    // If value was not replaced
     if (keyExists == false) {
       alist.add(new KVPair<JSONString, JSONValue>(key, value));
       ++this.size;
@@ -271,7 +256,9 @@ public class JSONHash implements JSONValue {
     return this.size;
   } // size()
 
-
+  /**
+   * Expands the capacity of the table.
+   */
   @SuppressWarnings("unchecked")
   private void expand() {
     // Figure out the size of the new table
@@ -282,6 +269,7 @@ public class JSONHash implements JSONValue {
     this.buckets = new Object[newSize];
     // Move all buckets from the old table to their appropriate
     // location in the new table.
+    this.size = 0;
     for (int i = 0; i < oldBuckets.length; i++) {
       if (oldBuckets[i] == null) {
         continue;
@@ -292,8 +280,10 @@ public class JSONHash implements JSONValue {
     } // for
   } // expand()
 
-
+  /**
+   * Calculate the hash of the key to get the index to the store the key.
+   */
   private int find(JSONString key) {
     return Math.abs(key.hashCode()) % this.buckets.length;
-  } // find(K)
+  } // find(JSONString)
 } // class JSONHash
